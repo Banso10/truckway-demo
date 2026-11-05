@@ -228,4 +228,97 @@ document.addEventListener("visibilitychange", () => {
   if (!document.hidden) checkUpdates();
 });
 
+window.findParking = async function () {
+  initMap();
+  if (!map) return;
+
+  const center = map.getCenter();
+  const btn = document.querySelector('button[onclick="findParking()"]');
+  const result = document.getElementById('results');
+
+  if (btn) btn.disabled = true;
+  statusMsg('Caricamento archivio TruckWay Italia...');
+  result.textContent = 'Ricerca in corso...';
+
+  try {
+    const response = await fetch(
+      './truckway_parcheggi_italia_v06.json'
+    );
+    if (!response.ok) throw new Error('Archivio non disponibile');
+
+    const data = await response.json();
+    if (!Array.isArray(data.locations)) {
+      throw new Error('Formato archivio non valido');
+    }
+
+    const rad = Math.PI / 180;
+    const distance = (lat, lon) => {
+      const a = (lat - center.lat) * rad;
+      const b = (lon - center.lng) * rad;
+      const h = Math.sin(a / 2) ** 2 +
+        Math.cos(center.lat * rad) *
+        Math.cos(lat * rad) *
+        Math.sin(b / 2) ** 2;
+      return 12742 * Math.asin(Math.sqrt(h));
+    };
+
+    const nearby = data.locations
+      .map(p => ({ ...p, km: distance(p.lat, p.lon) }))
+      .filter(p => Number.isFinite(p.km) && p.km <= 15)
+      .sort((a, b) => a.km - b.km);
+
+    layer.clearLayers();
+    result.replaceChildren();
+
+    if (!nearby.length) {
+      result.textContent =
+        'Nessuna area censita entro 15 km. Sposta la mappa e riprova.';
+    }
+
+    nearby.forEach(p => {
+      const name = p.name || 'Possibile area di sosta';
+      L.marker([p.lat, p.lon])
+        .addTo(layer)
+        .bindPopup(name + ' - ' + p.km.toFixed(1) + ' km');
+
+      const item = document.createElement('div');
+      item.className = 'result';
+
+      const title = document.createElement('strong');
+      title.textContent = name;
+      item.append(title);
+
+      const info = document.createElement('p');
+      info.className = 'notice';
+      info.textContent =
+        p.km.toFixed(1) + ' km in linea d’aria' +
+        (p.road ? ' · Strada ' + p.road : '') +
+        ' · Accesso e disponibilità non verificati';
+      item.append(info);
+
+      const link = document.createElement('a');
+      link.href = 'https://www.openstreetmap.org/?mlat=' +
+        p.lat + '&mlon=' + p.lon +
+        '#map=16/' + p.lat + '/' + p.lon;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = 'Visualizza sulla mappa';
+      item.append(link);
+
+      result.append(item);
+    });
+
+    statusMsg(
+      'TruckWay Italia: ' + nearby.length +
+      ' aree censite entro 15 km. Dati non in tempo reale.'
+    );
+  } catch (error) {
+    console.error(error);
+    statusMsg('Impossibile caricare il database TruckWay.');
+    result.textContent = 'Controlla il file JSON e riprova.';
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+};
+
 </script></body></html>
