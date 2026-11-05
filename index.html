@@ -1,1 +1,114 @@
 
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<title>TruckWay</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f5f8fc;color:#18324a;font-family:Arial,sans-serif}
+header{background:white;padding:24px 20px;border-bottom:1px solid #e1e8ef}
+h1{margin:0;color:#1766b1;font-size:30px}
+small{color:#657b8e}
+main{padding:20px;max-width:600px;margin:auto;padding-bottom:100px}
+.card{background:white;padding:20px;border-radius:18px;margin-bottom:15px;box-shadow:0 3px 12px #1232}
+h2{font-size:19px;margin-top:0}
+button{background:#1766b1;color:white;border:0;border-radius:12px;padding:14px;font-size:15px;font-weight:bold;cursor:pointer}
+nav{position:fixed;bottom:0;background:white;width:100%;display:flex;justify-content:space-around;padding:14px 4px;border-top:1px solid #ddd}
+nav button{background:transparent;color:#1766b1;font-size:12px;padding:8px}
+.page{display:none}
+.page.active{display:block}
+.green{color:#16845a}
+input{width:100%;padding:13px;border:1px solid #ccd7e0;border-radius:10px;margin:8px 0}
+</style>
+</head>
+<body>
+<header>
+<h1>🚛 TruckWay</h1>
+<small>Il tuo compagno di viaggio</small>
+</header>
+<main>
+<section id="home" class="page active">
+<h2>Benvenuto su TruckWay</h2>
+<div class="card">
+<h2>🅿️ Trova una sosta</h2>
+<p>Scopri parcheggi e aree di riposo per camion.</p>
+<button onclick="show('parking')">Cerca parcheggi</button>
+</div>
+<div class="card">
+<h2>🍝 Trattorie</h2>
+<p>Scopri i ristoranti dedicati ai camionisti.</p>
+<button onclick="show('food')">Esplora trattorie</button>
+</div>
+<div class="card">
+<h2>⏱️ Ore di guida</h2>
+<p>Registra il tuo tempo di guida indicativo.</p>
+<button onclick="show('timer')">Apri contatore</button>
+</div>
+</section>
+<section id="parking" class="page">
+<h2>🅿️ Parcheggi camion</h2>
+<div class="card"><b>Area di sosta Demo A</b><p class="green">Posti disponibili: esempio</p><small>Dati dimostrativi</small></div>
+<div class="card"><b>Parcheggio Demo B</b><p>Servizi: docce, ristorante</p><small>Dati dimostrativi</small></div>
+</section>
+<section id="food" class="page">
+<h2>🍝 Trattorie</h2>
+<div class="card"><b>Trattoria Demo</b><p>Menù camionista: €15 (esempio)</p><small>Attività fittizia</small></div>
+</section>
+<section id="timer" class="page">
+<h2>⏱️ Diario guida</h2>
+<div class="card">
+<h2 id="clock">00:00:00</h2>
+<button onclick="start()">Avvia</button>
+<button onclick="stop()">Pausa</button>
+<button onclick="reset()">Azzera</button>
+<p><small>Timer dimostrativo: non sostituisce il tachigrafo.</small></p>
+</div>
+</section>
+<section id="diary" class="page">
+<h2>📒 Diario di bordo</h2>
+<div class="card">
+<input id="note" placeholder="Scrivi una nota di viaggio">
+<button onclick="saveNote()">Salva nota</button>
+<p id="saved"></p>
+</div>
+</section>
+</main>
+<nav>
+<button onclick="show('home')">🏠 Home</button>
+<button onclick="show('parking')">🅿️ Soste</button>
+<button onclick="show('food')">🍝 Food</button>
+<button onclick="show('timer')">⏱️ Guida</button>
+<button onclick="show('diary')">📒 Diario</button>
+</nav>
+<script>
+function show(id){
+document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+}
+let seconds=0,interval=null;
+function render(){
+let h=Math.floor(seconds/3600);
+let m=Math.floor(seconds%3600/60);
+let s=seconds%60;
+document.getElementById('clock').textContent=[h,m,s].map(x=>String(x).padStart(2,'0')).join(':');
+}
+function start(){
+if(interval)return;
+interval=setInterval(()=>{seconds++;render()},1000);
+}
+function stop(){clearInterval(interval);interval=null}
+function reset(){stop();seconds=0;render()}
+function saveNote(){
+let note=document.getElementById('note').value.trim();
+if(!note)return;
+localStorage.setItem('truckway-note',note);
+document.getElementById('saved').textContent=note;
+}
+document.getElementById('saved').textContent=localStorage.getItem('truckway-note')||'';
+</script>
+</body>
+</html>
+
