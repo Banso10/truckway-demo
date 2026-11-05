@@ -1,114 +1,22 @@
-
-<!DOCTYPE html>
-<html lang="it">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#ffffff">
-<title>TruckWay</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;background:#f5f8fc;color:#18324a;font-family:Arial,sans-serif}
-header{background:white;padding:24px 20px;border-bottom:1px solid #e1e8ef}
-h1{margin:0;color:#1766b1;font-size:30px}
-small{color:#657b8e}
-main{padding:20px;max-width:600px;margin:auto;padding-bottom:100px}
-.card{background:white;padding:20px;border-radius:18px;margin-bottom:15px;box-shadow:0 3px 12px #1232}
-h2{font-size:19px;margin-top:0}
-button{background:#1766b1;color:white;border:0;border-radius:12px;padding:14px;font-size:15px;font-weight:bold;cursor:pointer}
-nav{position:fixed;bottom:0;background:white;width:100%;display:flex;justify-content:space-around;padding:14px 4px;border-top:1px solid #ddd}
-nav button{background:transparent;color:#1766b1;font-size:12px;padding:8px}
-.page{display:none}
-.page.active{display:block}
-.green{color:#16845a}
-input{width:100%;padding:13px;border:1px solid #ccd7e0;border-radius:10px;margin:8px 0}
-</style>
-</head>
-<body>
-<header>
-<h1>🚛 TruckWay</h1>
-<small>Il tuo compagno di viaggio</small>
-</header>
-<main>
-<section id="home" class="page active">
-<h2>Benvenuto su TruckWay</h2>
-<div class="card">
-<h2>🅿️ Trova una sosta</h2>
-<p>Scopri parcheggi e aree di riposo per camion.</p>
-<button onclick="show('parking')">Cerca parcheggi</button>
-</div>
-<div class="card">
-<h2>🍝 Trattorie</h2>
-<p>Scopri i ristoranti dedicati ai camionisti.</p>
-<button onclick="show('food')">Esplora trattorie</button>
-</div>
-<div class="card">
-<h2>⏱️ Ore di guida</h2>
-<p>Registra il tuo tempo di guida indicativo.</p>
-<button onclick="show('timer')">Apri contatore</button>
-</div>
-</section>
-<section id="parking" class="page">
-<h2>🅿️ Parcheggi camion</h2>
-<div class="card"><b>Area di sosta Demo A</b><p class="green">Posti disponibili: esempio</p><small>Dati dimostrativi</small></div>
-<div class="card"><b>Parcheggio Demo B</b><p>Servizi: docce, ristorante</p><small>Dati dimostrativi</small></div>
-</section>
-<section id="food" class="page">
-<h2>🍝 Trattorie</h2>
-<div class="card"><b>Trattoria Demo</b><p>Menù camionista: €15 (esempio)</p><small>Attività fittizia</small></div>
-</section>
-<section id="timer" class="page">
-<h2>⏱️ Diario guida</h2>
-<div class="card">
-<h2 id="clock">00:00:00</h2>
-<button onclick="start()">Avvia</button>
-<button onclick="stop()">Pausa</button>
-<button onclick="reset()">Azzera</button>
-<p><small>Timer dimostrativo: non sostituisce il tachigrafo.</small></p>
-</div>
-</section>
-<section id="diary" class="page">
-<h2>📒 Diario di bordo</h2>
-<div class="card">
-<input id="note" placeholder="Scrivi una nota di viaggio">
-<button onclick="saveNote()">Salva nota</button>
-<p id="saved"></p>
-</div>
-</section>
-</main>
-<nav>
-<button onclick="show('home')">🏠 Home</button>
-<button onclick="show('parking')">🅿️ Soste</button>
-<button onclick="show('food')">🍝 Food</button>
-<button onclick="show('timer')">⏱️ Guida</button>
-<button onclick="show('diary')">📒 Diario</button>
-</nav>
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#ffffff"><title>TruckWay 0.2</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"  crossorigin="" />
+<style>*{box-sizing:border-box}body{margin:0;background:#f3f7fb;color:#17324a;font:16px system-ui,-apple-system,sans-serif}header{background:white;padding:22px 18px;border-bottom:1px solid #e0e7ef}h1{margin:0;color:#1766b1;font-size:29px}small,.muted{color:#60768a}main{max-width:720px;margin:auto;padding:18px 16px 105px}.card{background:white;border-radius:17px;padding:18px;margin:12px 0;box-shadow:0 3px 12px #18324a12}h2{font-size:20px;margin:5px 0 12px}button{border:0;border-radius:11px;padding:12px 14px;background:#1766b1;color:white;font-size:15px;font-weight:650;cursor:pointer}button.secondary{background:#e5f0fb;color:#145b9b}button:disabled{opacity:.5}input,textarea{width:100%;border:1px solid #cbd6e0;border-radius:10px;padding:12px;font:inherit;margin:8px 0}nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:white;border-top:1px solid #dde5ec;justify-content:space-around;padding:9px 3px calc(9px + env(safe-area-inset-bottom));z-index:1000}nav button{background:none;color:#1766b1;font-size:12px;padding:8px 3px}.page{display:none}.page.active{display:block}#map{height:390px;border-radius:14px;z-index:1;background:#e7eef5}.actions{display:flex;flex-wrap:wrap;gap:8px}.result{border-top:1px solid #e8eef4;padding:12px 0}.result a{color:#1766b1}.notice{font-size:13px;color:#60768a;line-height:1.5}.pill{display:inline-block;background:#e6f6ed;color:#176b45;border-radius:30px;padding:5px 9px;font-size:12px}#clock{font-size:34px;font-weight:700}.leaflet-container{font:inherit}</style>
+</head><body><header><h1>🚛 TruckWay</h1><small>Il tuo compagno di viaggio · v0.2</small></header><main>
+<section id="home" class="page active"><h2>Benvenuto su TruckWay</h2><div class="card"><h2>🗺️ Mappa e parcheggi</h2><p>Esplora la mappa, trova la tua posizione e cerca aree di sosta per camion.</p><button onclick="show('parking')">Apri la mappa</button></div><div class="card"><h2>🍝 Trattorie</h2><p>Le convenzioni arriveranno nelle prossime versioni.</p><button onclick="show('food')">Esplora trattorie</button></div><div class="card"><h2>⏱️ Ore di guida</h2><p>Contatore manuale dimostrativo.</p><button onclick="show('timer')">Apri contatore</button></div></section>
+<section id="parking" class="page"><h2>🅿️ Mappa parcheggi camion</h2><div class="card"><div id="map"></div><p id="status" role="status" class="notice">Mappa pronta. Tocca “La mia posizione” per attivare il GPS.</p><div class="actions"><button id="locate" onclick="locateMe()">📍 La mia posizione</button><button class="secondary" onclick="findParking()">🚛 Cerca parcheggi qui</button></div><p class="notice">La ricerca usa l'area al centro della mappa (raggio circa 15 km). I parcheggi sono dati OpenStreetMap, non disponibilità in tempo reale.</p></div><div class="card"><h2>Risultati</h2><div id="results" class="muted">Premi “Cerca parcheggi qui”.</div></div></section>
+<section id="food" class="page"><h2>🍝 Trattorie</h2><div class="card">Stiamo preparando le schede delle trattorie convenzionate. Nessuna convenzione è ancora verificata.</div></section>
+<section id="timer" class="page"><h2>⏱️ Ore di guida</h2><div class="card"><div id="clock">00:00:00</div><div class="actions"><button onclick="startTimer()">Avvia</button><button class="secondary" onclick="stopTimer()">Pausa</button><button class="secondary" onclick="resetTimer()">Azzera</button></div><p class="notice">Contatore indicativo: non sostituisce il tachigrafo, non registra automaticamente la guida e non garantisce il rispetto dei tempi di legge. Può interrompersi quando l'iPhone sospende la pagina.</p></div></section>
+<section id="diary" class="page"><h2>📒 Diario di bordo</h2><div class="card"><label for="note">Nota di viaggio</label><textarea id="note" rows="4" placeholder="Scrivi una nota..."></textarea><button onclick="saveNote()">Salva sul dispositivo</button><p id="saved" class="notice"></p></div></section>
+</main><nav><button onclick="show('home')">🏠 Home</button><button onclick="show('parking')">🗺️ Mappa</button><button onclick="show('food')">🍝 Food</button><button onclick="show('timer')">⏱️ Guida</button><button onclick="show('diary')">📒 Diario</button></nav>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
-function show(id){
-document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
-document.getElementById(id).classList.add('active');
-}
-let seconds=0,interval=null;
-function render(){
-let h=Math.floor(seconds/3600);
-let m=Math.floor(seconds%3600/60);
-let s=seconds%60;
-document.getElementById('clock').textContent=[h,m,s].map(x=>String(x).padStart(2,'0')).join(':');
-}
-function start(){
-if(interval)return;
-interval=setInterval(()=>{seconds++;render()},1000);
-}
-function stop(){clearInterval(interval);interval=null}
-function reset(){stop();seconds=0;render()}
-function saveNote(){
-let note=document.getElementById('note').value.trim();
-if(!note)return;
-localStorage.setItem('truckway-note',note);
-document.getElementById('saved').textContent=note;
-}
-document.getElementById('saved').textContent=localStorage.getItem('truckway-note')||'';
-</script>
-</body>
-</html>
-
+let map, layer, gpsMarker;
+function show(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='parking')setTimeout(initMap,80)}
+function statusMsg(s){document.getElementById('status').textContent=s}
+function initMap(){if(!window.L){statusMsg('Impossibile caricare la libreria della mappa. Verifica la connessione.');return}if(!map){map=L.map('map').setView([45.4642,9.19],9);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);layer=L.layerGroup().addTo(map)}map.invalidateSize()}
+function locateMe(){initMap();if(!navigator.geolocation){statusMsg('GPS non disponibile su questo browser.');return}statusMsg('Richiesta posizione GPS in corso...');navigator.geolocation.getCurrentPosition(p=>{let lat=p.coords.latitude,lon=p.coords.longitude;map.setView([lat,lon],13);if(gpsMarker)map.removeLayer(gpsMarker);gpsMarker=L.circleMarker([lat,lon],{radius:9,color:'#fff',weight:3,fillColor:'#1766b1',fillOpacity:1}).addTo(map).bindPopup('La tua posizione approssimativa');statusMsg('Posizione trovata. Premi “Cerca parcheggi qui”.')},e=>statusMsg('Posizione non disponibile: '+(e.code===1?'permesso negato':e.code===2?'segnale GPS assente':'tempo scaduto')+'. Puoi comunque esplorare la mappa.'),{enableHighAccuracy:true,timeout:12000,maximumAge:60000})}
+async function findParking(){initMap();if(!map)return;const c=map.getCenter();const btn=document.querySelector('button[onclick="findParking()"]');btn.disabled=true;statusMsg('Ricerca parcheggi OpenStreetMap...');document.getElementById('results').textContent='Ricerca in corso...';layer.clearLayers();const q=`[out:json][timeout:20];(nwr["amenity"="parking"]["hgv"="designated"](around:15000,${c.lat},${c.lng});nwr["amenity"="parking"]["hgv"="yes"](around:15000,${c.lat},${c.lng});nwr["amenity"="parking"]["parking"="truck"](around:15000,${c.lat},${c.lng});nwr["highway"="rest_area"](around:15000,${c.lat},${c.lng}););out center 80;`;
+try{const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),25000);let response;try{response=await fetch('https://overpass.kumi.systems/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'},signal:controller.signal})}finally{clearTimeout(timeout)}if(!response.ok)throw Error('Servizio temporaneamente non disponibile');const data=await response.json();const list=(data.elements||[]).map(e=>({lat:e.lat??e.center?.lat,lon:e.lon??e.center?.lon,t:e.tags||{},id:e.id,type:e.type})).filter(x=>Number.isFinite(x.lat)&&Number.isFinite(x.lon));const unique=[...new Map(list.map(x=>[x.type+':'+x.id,x])).values()];const result=document.getElementById('results');result.replaceChildren();if(!unique.length){result.textContent='Nessun parcheggio segnalato in quest’area. Prova a spostare la mappa.'}unique.forEach((x,i)=>{const name=x.t.name||'Area di sosta / parcheggio';L.marker([x.lat,x.lon]).addTo(layer).bindPopup(document.createTextNode(name));const el=document.createElement('div');el.className='result';const strong=document.createElement('strong');strong.textContent=name;el.append(strong);const desc=document.createElement('p');desc.className='notice';desc.textContent=(x.t['addr:street']||'')+(x.t.hgv?' · Accesso HGV: '+x.t.hgv:'')+' · Disponibilità non verificata';el.append(desc);const a=document.createElement('a');a.href='https://www.openstreetmap.org/?mlat='+x.lat+'&mlon='+x.lon+'#map=16/'+x.lat+'/'+x.lon;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Vedi su OpenStreetMap';el.append(a);result.append(el)});statusMsg('Trovati '+unique.length+' luoghi mappati. Verifica sempre accesso, limiti e disponibilità.')}catch(e){statusMsg('Ricerca non riuscita: il servizio pubblico può essere occupato. Riprova più tardi.');document.getElementById('results').textContent='Nessun dato caricato.'}finally{btn.disabled=false}}
+let seconds=0,timer=null,lastStart=null;function render(){const total=seconds+(lastStart?Math.floor((Date.now()-lastStart)/1000):0);document.getElementById('clock').textContent=[Math.floor(total/3600),Math.floor(total%3600/60),total%60].map(x=>String(x).padStart(2,'0')).join(':')}function startTimer(){if(timer)return;lastStart=Date.now();timer=setInterval(render,1000)}function stopTimer(){if(!timer)return;seconds+=Math.floor((Date.now()-lastStart)/1000);lastStart=null;clearInterval(timer);timer=null;render()}function resetTimer(){stopTimer();seconds=0;render()}function saveNote(){const value=document.getElementById('note').value;try{localStorage.setItem('truckway-note',value);document.getElementById('saved').textContent='Nota salvata su questo dispositivo.'}catch(e){document.getElementById('saved').textContent='Impossibile salvare la nota.'}}document.getElementById('note').value=localStorage.getItem('truckway-note')||'';
+</script></body></html>
