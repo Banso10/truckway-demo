@@ -2,7 +2,7 @@
 <html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#ffffff"><title>TruckWay 0.2</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"  crossorigin="" />
 <style>*{box-sizing:border-box}body{margin:0;background:#f3f7fb;color:#17324a;font:16px system-ui,-apple-system,sans-serif}header{background:white;padding:22px 18px;border-bottom:1px solid #e0e7ef}h1{margin:0;color:#1766b1;font-size:29px}small,.muted{color:#60768a}main{max-width:720px;margin:auto;padding:18px 16px 105px}.card{background:white;border-radius:17px;padding:18px;margin:12px 0;box-shadow:0 3px 12px #18324a12}h2{font-size:20px;margin:5px 0 12px}button{border:0;border-radius:11px;padding:12px 14px;background:#1766b1;color:white;font-size:15px;font-weight:650;cursor:pointer}button.secondary{background:#e5f0fb;color:#145b9b}button:disabled{opacity:.5}input,textarea{width:100%;border:1px solid #cbd6e0;border-radius:10px;padding:12px;font:inherit;margin:8px 0}nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:white;border-top:1px solid #dde5ec;justify-content:space-around;padding:9px 3px calc(9px + env(safe-area-inset-bottom));z-index:1000}nav button{background:none;color:#1766b1;font-size:12px;padding:8px 3px}.page{display:none}.page.active{display:block}#map{height:390px;border-radius:14px;z-index:1;background:#e7eef5}.actions{display:flex;flex-wrap:wrap;gap:8px}.result{border-top:1px solid #e8eef4;padding:12px 0}.result a{color:#1766b1}.notice{font-size:13px;color:#60768a;line-height:1.5}.pill{display:inline-block;background:#e6f6ed;color:#176b45;border-radius:30px;padding:5px 9px;font-size:12px}#clock{font-size:34px;font-weight:700}.leaflet-container{font:inherit}</style>
-</head><body><header><h1>🚛 TruckWay</h1><small>Il tuo compagno di viaggio · v0.3.</small></header><main>
+</head><body><header><h1>🚛 TruckWay</h1><small>Il tuo compagno di viaggio · v0.4.</small></header><main>
 <section id="home" class="page active"><h2>Benvenuto su TruckWay</h2><div class="card"><h2>🗺️ Mappa e parcheggi</h2><p>Esplora la mappa, trova la tua posizione e cerca aree di sosta per camion.</p><button onclick="show('parking')">Apri la mappa</button></div><div class="card"><h2>🍝 Trattorie</h2><p>Le convenzioni arriveranno nelle prossime versioni.</p><button onclick="show('food')">Esplora trattorie</button></div><div class="card"><h2>⏱️ Ore di guida</h2><p>Contatore manuale dimostrativo.</p><button onclick="show('timer')">Apri contatore</button></div></section>
 <section id="parking" class="page"><h2>🅿️ Mappa parcheggi camion</h2><div class="card"><div id="map"></div><p id="status" role="status" class="notice">Mappa pronta. Tocca “La mia posizione” per attivare il GPS.</p><div class="actions"><button id="locate" onclick="locateMe()">📍 La mia posizione</button><button class="secondary" onclick="findParking()">🚛 Cerca parcheggi qui</button></div><p class="notice">La ricerca usa l'area al centro della mappa (raggio circa 15 km). I parcheggi sono dati OpenStreetMap, non disponibilità in tempo reale.</p></div><div class="card"><h2>Risultati</h2><div id="results" class="muted">Premi “Cerca parcheggi qui”.</div></div></section>
 <section id="food" class="page"><h2>🍝 Trattorie</h2><div class="card">Stiamo preparando le schede delle trattorie convenzionate. Nessuna convenzione è ancora verificata.</div></section>
@@ -16,11 +16,190 @@ function show(id){document.querySelectorAll('.page').forEach(x=>x.classList.remo
 function statusMsg(s){document.getElementById('status').textContent=s}
 function initMap(){if(!window.L){statusMsg('Impossibile caricare la libreria della mappa. Verifica la connessione.');return}if(!map){map=L.map('map').setView([45.4642,9.19],9);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);layer=L.layerGroup().addTo(map)}map.invalidateSize()}
 function locateMe(){initMap();if(!navigator.geolocation){statusMsg('GPS non disponibile su questo browser.');return}statusMsg('Richiesta posizione GPS in corso...');navigator.geolocation.getCurrentPosition(p=>{let lat=p.coords.latitude,lon=p.coords.longitude;map.setView([lat,lon],13);if(gpsMarker)map.removeLayer(gpsMarker);gpsMarker=L.circleMarker([lat,lon],{radius:9,color:'#fff',weight:3,fillColor:'#1766b1',fillOpacity:1}).addTo(map).bindPopup('La tua posizione approssimativa');statusMsg('Posizione trovata. Premi “Cerca parcheggi qui”.')},e=>statusMsg('Posizione non disponibile: '+(e.code===1?'permesso negato':e.code===2?'segnale GPS assente':'tempo scaduto')+'. Puoi comunque esplorare la mappa.'),{enableHighAccuracy:true,timeout:12000,maximumAge:60000})}
-async function findParking(){initMap();if(!map)return;const c=map.getCenter();const btn=document.querySelector('button[onclick="findParking()"]');btn.disabled=true;statusMsg('Ricerca parcheggi OpenStreetMap...');document.getElementById('results').textContent='Ricerca in corso...';layer.clearLayers();const q=`[out:json][timeout:20];(nwr["amenity"="parking"]["hgv"="designated"](around:15000,${c.lat},${c.lng});nwr["amenity"="parking"]["hgv"="yes"](around:15000,${c.lat},${c.lng});nwr["amenity"="parking"]["parking"="truck"](around:15000,${c.lat},${c.lng});nwr["highway"="rest_area"](around:15000,${c.lat},${c.lng}););out center 80;`;
-try{const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),25000);let response;try{response=await fetch('https://overpass.kumi.systems/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'},signal:controller.signal})}finally{clearTimeout(timeout)}if(!response.ok)throw Error('Servizio temporaneamente non disponibile');const data=await response.json();const list=(data.elements||[]).map(e=>({lat:e.lat??e.center?.lat,lon:e.lon??e.center?.lon,t:e.tags||{},id:e.id,type:e.type})).filter(x=>Number.isFinite(x.lat)&&Number.isFinite(x.lon));const unique=[...new Map(list.map(x=>[x.type+':'+x.id,x])).values()];const result=document.getElementById('results');result.replaceChildren();if(!unique.length){result.textContent='Nessun parcheggio segnalato in quest’area. Prova a spostare la mappa.'}unique.forEach((x,i)=>{const name=x.t.name||'Area di sosta / parcheggio';L.marker([x.lat,x.lon]).addTo(layer).bindPopup(document.createTextNode(name));const el=document.createElement('div');el.className='result';const strong=document.createElement('strong');strong.textContent=name;el.append(strong);const desc=document.createElement('p');desc.className='notice';desc.textContent=(x.t['addr:street']||'')+(x.t.hgv?' · Accesso HGV: '+x.t.hgv:'')+' · Disponibilità non verificata';el.append(desc);const a=document.createElement('a');a.href='https://www.openstreetmap.org/?mlat='+x.lat+'&mlon='+x.lon+'#map=16/'+x.lat+'/'+x.lon;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Vedi su OpenStreetMap';el.append(a);result.append(el)});statusMsg('Trovati '+unique.length+' luoghi mappati. Verifica sempre accesso, limiti e disponibilità.')}catch(e){statusMsg('Ricerca non riuscita: il servizio pubblico può essere occupato. Riprova più tardi.');document.getElementById('results').textContent='Nessun dato caricato.'}finally{btn.disabled=false}}
+
+async function findParking() {
+  initMap();
+  if (!map) return;
+
+  const c = map.getCenter();
+  const btn = document.querySelector(
+    'button[onclick="findParking()"]'
+  );
+  const result = document.getElementById('results');
+
+  if (btn) btn.disabled = true;
+  statusMsg('Ricerca parcheggi in corso...');
+  result.textContent = 'Ricerca in corso...';
+
+  const q = `[out:json][timeout:25];
+  (
+    nwr["amenity"="parking"]["hgv"="designated"]
+      (around:15000,${c.lat},${c.lng});
+    nwr["amenity"="parking"]["hgv"="yes"]
+      (around:15000,${c.lat},${c.lng});
+    nwr["amenity"="parking"]["parking"="truck"]
+      (around:15000,${c.lat},${c.lng});
+    nwr["highway"="rest_area"]
+      (around:15000,${c.lat},${c.lng});
+  );
+  out center 80;`;
+
+  const servers = [
+    'https://overpass.private.coffee/api/interpreter',
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter'
+  ];
+
+  try {
+    let data = null;
+    let lastError = null;
+
+    for (let i = 0; i < servers.length; i++) {
+      statusMsg(
+        'Ricerca parcheggi: server ' +
+        (i + 1) + ' di ' + servers.length
+      );
+
+      const controller = new AbortController();
+      const timeout = setTimeout(
+        () => controller.abort(), 30000
+      );
+
+      try {
+        const response = await fetch(servers[i], {
+          method: 'POST',
+          headers: {
+            'Content-Type':
+              'application/x-www-form-urlencoded'
+          },
+          body: 'data=' + encodeURIComponent(q),
+          signal: controller.signal,
+          cache: 'no-store'
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            'Errore HTTP ' + response.status
+          );
+        }
+
+        data = await response.json();
+
+        if (!Array.isArray(data.elements)) {
+          throw new Error('Risposta non valida');
+        }
+
+        break;
+      } catch (error) {
+        lastError = error;
+        console.warn(
+          'Server Overpass non disponibile:',
+          servers[i], error
+        );
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    if (!data) {
+      throw lastError ||
+        new Error('Nessun server disponibile');
+    }
+
+    const list = data.elements
+      .map(e => ({
+        lat: e.lat ?? e.center?.lat,
+        lon: e.lon ?? e.center?.lon,
+        t: e.tags || {},
+        id: e.id,
+        type: e.type
+      }))
+      .filter(x =>
+        Number.isFinite(x.lat) &&
+        Number.isFinite(x.lon)
+      );
+
+    const unique = [
+      ...new Map(
+        list.map(x => [x.type + ':' + x.id, x])
+      ).values()
+    ];
+
+    layer.clearLayers();
+    result.replaceChildren();
+
+    if (!unique.length) {
+      result.textContent =
+        'Nessun parcheggio mappato in questa zona. ' +
+        'Prova a spostare la mappa.';
+    }
+
+    unique.forEach(x => {
+      const name =
+        x.t.name || 'Area di sosta / parcheggio';
+
+      L.marker([x.lat, x.lon])
+        .addTo(layer)
+        .bindPopup(
+          document.createTextNode(name)
+        );
+
+      const el = document.createElement('div');
+      el.className = 'result';
+
+      const strong = document.createElement('strong');
+      strong.textContent = name;
+      el.append(strong);
+
+      const desc = document.createElement('p');
+      desc.className = 'notice';
+      desc.textContent =
+        (x.t['addr:street'] || '') +
+        (x.t.hgv
+          ? ' · Accesso HGV: ' + x.t.hgv
+          : '') +
+        ' · Disponibilità non verificata';
+      el.append(desc);
+
+      const a = document.createElement('a');
+      a.href =
+        'https://www.openstreetmap.org/?mlat=' +
+        x.lat + '&mlon=' + x.lon +
+        '#map=16/' + x.lat + '/' + x.lon;
+
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = 'Vedi su OpenStreetMap';
+      el.append(a);
+
+      result.append(el);
+    });
+
+    statusMsg(
+      'Trovati ' + unique.length +
+      ' luoghi mappati. Verifica sempre ' +
+      'accesso, limiti e disponibilità.'
+    );
+
+  } catch (error) {
+    console.error('Errore ricerca:', error);
+
+    statusMsg(
+      'Ricerca non riuscita. ' +
+      'I servizi cartografici non rispondono.'
+    );
+
+    result.textContent =
+      'Impossibile caricare i parcheggi. ' +
+      'Controlla la connessione e riprova.';
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
 let seconds=0,timer=null,lastStart=null;function render(){const total=seconds+(lastStart?Math.floor((Date.now()-lastStart)/1000):0);document.getElementById('clock').textContent=[Math.floor(total/3600),Math.floor(total%3600/60),total%60].map(x=>String(x).padStart(2,'0')).join(':')}function startTimer(){if(timer)return;lastStart=Date.now();timer=setInterval(render,1000)}function stopTimer(){if(!timer)return;seconds+=Math.floor((Date.now()-lastStart)/1000);lastStart=null;clearInterval(timer);timer=null;render()}function resetTimer(){stopTimer();seconds=0;render()}function saveNote(){const value=document.getElementById('note').value;try{localStorage.setItem('truckway-note',value);document.getElementById('saved').textContent='Nota salvata su questo dispositivo.'}catch(e){document.getElementById('saved').textContent='Impossibile salvare la nota.'}}document.getElementById('note').value=localStorage.getItem('truckway-note')||'';
 
-const TRUCKWAY_VERSION = "0.3";
+const TRUCKWAY_VERSION = "0.4";
 
 async function checkUpdates() {
   try {
