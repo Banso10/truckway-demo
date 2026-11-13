@@ -308,13 +308,21 @@ window.findParking = async function () {
       title.textContent = name;
       item.append(title);
 
-      const info = document.createElement('p');
-      info.className = 'notice';
-      info.textContent =
-        p.km.toFixed(1) + ' km in linea d’aria' +
-        (p.road ? ' · Strada ' + p.road : '') +
-        ' · Accesso e disponibilità non verificati';
-      item.append(info);
+      
+const info = document.createElement('p');
+info.className = 'notice';
+
+const distanza = p.km.toFixed(1) + ' km in linea d’aria';
+const strada = p.road ? ' · Strada ' + p.road : '';
+
+info.textContent =
+  '📍 ' + distanza +
+  strada +
+  ' · 🚛 Accesso camion da verificare' +
+  ' · 🅿️ Posti liberi non disponibili in tempo reale';
+
+item.append(info);
+
 
       const link = document.createElement('a');
       link.href = 'https://www.openstreetmap.org/?mlat=' +
