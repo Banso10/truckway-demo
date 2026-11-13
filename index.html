@@ -304,6 +304,20 @@ window.findParking = async function () {
       link.rel = 'noopener noreferrer';
       link.textContent = 'Visualizza sulla mappa';
       item.append(link);
+      
+const directions = document.createElement('a');
+directions.href =
+  'https://www.google.com/maps/dir/?api=1' +
+  '&destination=' + encodeURIComponent(p.lat + ',' + p.lon);
+directions.target = '_blank';
+directions.rel = 'noopener noreferrer';
+directions.textContent = '🧭 Indicazioni stradali';
+directions.style.display = 'block';
+directions.style.marginTop = '12px';
+directions.style.fontWeight = 'bold';
+
+item.append(directions);
+
 
       result.append(item);
     });
